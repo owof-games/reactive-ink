@@ -7,8 +7,8 @@ env:
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   # from https://github.com/mob-sakai/Coffee.Internal/blob/5d0bd14be288153555f975240608e7ee1576b091/.github/workflows/test.yml
