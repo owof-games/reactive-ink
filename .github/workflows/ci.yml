@@ -8,6 +8,9 @@ jobs:
     name: run unit tests
     runs-on: self-hosted
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Cache Library
         uses: actions/cache@v3
         with:
