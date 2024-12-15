@@ -28,7 +28,7 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           packageMode: true
           scopedRegistryUrl: https://package.openupm.com
-          registryScopes: 'com.cysharp.r3, com.cysharp.unitask, com.github-glitchenzo.nugetforunity'
+          registryScopes: 'com.cysharp.r3, com.cysharp.unitask, com.github-glitchenzo.nugetforunity, com.inkle.ink-unity-integration'
           unityVersion: '6000.0.23f1'
       - uses: actions/upload-artifact@v3
         if: always()
