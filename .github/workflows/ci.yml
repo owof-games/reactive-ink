@@ -3,7 +3,7 @@
 env:
   # MINIMUM_VERSION: The minimum version of Unity.
   MINIMUM_VERSION: 2021.3
-  EXCLUDE_FILTER: '(2020.2.0)'
+  EXCLUDE_FILTER: '(2023|a|b)'
 
 on:
   push:
