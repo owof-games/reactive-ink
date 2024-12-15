@@ -24,10 +24,11 @@
       "url": "https://package.openupm.com"
     },
     "com.inkle.ink-unity-integration": {
-      "version": "file:E:/ProgettiUnity/ink-unity-integration-with-asset-importer/Packages/Ink",
+      "version": "https://github.com/RedGlow/ink-unity-integration-for-reactive.git#upm",
       "depth": 0,
-      "source": "local",
-      "dependencies": {}
+      "source": "git",
+      "dependencies": {},
+      "hash": "537b5e69ecbdc6e79fcf196fd46a6c7b2b37bf32"
     },
     "com.unity.burst": {
       "version": "1.8.18",
