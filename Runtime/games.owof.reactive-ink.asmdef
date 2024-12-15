@@ -1,0 +1,18 @@
+{
+  "name": "games.owof.reactive-ink",
+  "rootNamespace": "ReactiveInk",
+  "references": [
+    "R3.Unity",
+    "Ink-Libraries",
+    "UniTask"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

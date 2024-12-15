@@ -1,0 +1,31 @@
+{
+  "name": "ReactiveInk.Tests",
+  "rootNamespace": "ReactiveInk.Tests",
+  "references": [
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner",
+    "games.owof.reactive-ink",
+    "Ink-Libraries",
+    "InkEditor",
+    "UniTask",
+    "R3.Unity"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll",
+    "FluentAssertions.dll",
+    "R3.dll",
+    "System.Threading.Channels.dll",
+    "Microsoft.Bcl.TimeProvider.dll",
+    "Microsoft.Extensions.TimeProvider.Testing.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
