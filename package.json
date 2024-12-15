@@ -10,7 +10,7 @@
   "dependencies": {
     "com.cysharp.r3": "1.2.9",
     "com.cysharp.unitask": "2.5.10",
-    "com.inkle.ink-unity-integration": "https://github.com/RedGlow/ink-unity-integration-for-reactive.git#upm"
+    "com.inkle.ink-unity-integration": "1.2.1"
   },
   "keywords": [
     "ink",

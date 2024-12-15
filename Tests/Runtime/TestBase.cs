@@ -3,9 +3,10 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Ink.UnityIntegration;
+using Ink;
 using R3;
 using UnityEditor;
+using UnityEngine;
 
 namespace ReactiveInk.Tests.Tests.Runtime
 {
@@ -19,9 +20,12 @@ namespace ReactiveInk.Tests.Tests.Runtime
         /// <returns>The compiled JSON of the ink file.</returns>
         protected string GetJson([CallerMemberName] string memberName = "")
         {
-            var assetPath = $"Packages/games.owof.reactive-ink/Tests/Runtime/{GetType().Name}/{memberName}.ink";
-            var inkFile = AssetDatabase.LoadAssetAtPath<InkFile>(assetPath);
-            return inkFile.storyJson;
+            var filename = $"{memberName}.txt";
+            var assetPath = $"Packages/games.owof.reactive-ink/Tests/Runtime/{GetType().Name}/{filename}";
+            var inkFile = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+            var compiler = new Compiler(inkFile.text);
+            var story = compiler.Compile();
+            return story.ToJson();
         }
 
         // protected StoryStepsAsyncReader GetStorySteps(ReactiveInkEngine engine)
