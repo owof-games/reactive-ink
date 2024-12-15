@@ -24,12 +24,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          projectPath: Packages/games.owof.reactive-ink
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          packageMode: true
-          scopedRegistryUrl: https://package.openupm.com
-          registryScopes: 'com.cysharp.r3, com.cysharp.unitask, com.github-glitchenzo.nugetforunity, com.inkle.ink-unity-integration'
-          unityVersion: '6000.0.23f1'
       - uses: actions/upload-artifact@v3
         if: always()
         with:
