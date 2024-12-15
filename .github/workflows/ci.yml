@@ -5,6 +5,9 @@ on:
       - main
 jobs:
   test:
+    strategy:
+      matrix:
+        unityVersion: ['6000.0.31f1', '2022.3.54f1', '2021.3.47f1']
     name: run unit tests
     runs-on: self-hosted
     steps:
@@ -25,6 +28,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          unityVersion: ${{ matrix.unityVersion }}
       - uses: actions/upload-artifact@v3
         if: always()
         with:
