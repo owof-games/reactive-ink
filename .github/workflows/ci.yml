@@ -19,16 +19,14 @@ jobs:
     steps:
       - name: Find target Unity versions
         id: setup
-#        run: |
-#          echo "==== Target Unity Versions ===="
-#          LATEST_VERSIONS=`npx unity-changeset list --versions --latest-patch --min ${MINIMUM_VERSION} --json --lts`
-#          ADDITIONAL_VERSIONS="[]"
-#          
-#          VERSIONS=`echo "[${LATEST_VERSIONS}, ${ADDITIONAL_VERSIONS}]" \
-#          | jq -c '[ flatten | sort | unique | .[] | select( test("${{ env.EXCLUDE_FILTER }}") | not ) ]'`
-#          echo "unityVersions=${VERSIONS}" | tee $GITHUB_OUTPUT
         run: |
-          echo 'unityVersions=["2021.3.47f1", "6000.0.31f1", "2022.3.54f1"]' | tee $GITHUB_OUTPUT
+          echo "==== Target Unity Versions ===="
+          LATEST_VERSIONS=`npx unity-changeset list --versions --latest-patch --min ${MINIMUM_VERSION} --json`
+          ADDITIONAL_VERSIONS="[]"
+
+          VERSIONS=`echo "[${LATEST_VERSIONS}, ${ADDITIONAL_VERSIONS}]" \
+          | jq -c '[ flatten | sort | unique | .[] | select( test("${{ env.EXCLUDE_FILTER }}") | not ) ]'`
+          echo "unityVersions=${VERSIONS}" | tee $GITHUB_OUTPUT
   test:
     name: run unit tests
     runs-on: self-hosted
