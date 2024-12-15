@@ -30,6 +30,15 @@ jobs:
         with:
           name: Test results
           path: artifacts
+      # see https://github.com/actions/checkout/issues/211, and in particular
+      # https://github.com/actions/checkout/issues/211#issuecomment-611986243
+      # and
+      # https://github.com/actions/checkout/issues/211#issuecomment-1463921672
+      # This also contains info about running self-hosted docker as non-root:
+      # https://github.com/actions/runner/issues/434
+      - name: Fix permissions
+        shell: sh
+        run: echo "user is $USER and workspace is $GITHUB_WORKSPACE and curr dir is $(pwd)" && sudo chown -R $USER:$USER $GITHUB_WORKSPACE/../..
   split-upm:
     needs: test
     name: split upm branch
@@ -44,3 +53,6 @@ jobs:
           git push -u origin upm
         env:
           PKG_ROOT: Packages/games.owof.reactive-ink
+      - name: Fix permissions
+        shell: sh
+        run: echo "user is $USER and workspace is $GITHUB_WORKSPACE and curr dir is $(pwd)" && sudo chown -R $USER:$USER $GITHUB_WORKSPACE/../..
