@@ -1,0 +1,26 @@
+{
+  "name": "games.owof.reactive-ink",
+  "version": "0.0.1",
+  "displayName": "Reactive Ink",
+  "description": "An Ink wrapper for Unity based on reactive programming",
+  "unity": "2021.3",
+  "documentationUrl": "https://owof-games.github.io/reactive-ink",
+  "changelogUrl": "https://owof-games.github.io/reactive-ink/changelog.html",
+  "licensesUrl": "https://owof-games.github.io/reactive-ink/licensing.html",
+  "dependencies": {
+    "com.cysharp.r3": "1.2.9",
+    "com.cysharp.unitask": "2.5.10",
+    "com.inkle.ink-unity-integration": "1.2.1"
+  },
+  "keywords": [
+    "ink",
+    "narrative",
+    "reactive",
+    "library"
+  ],
+  "author": {
+    "name": "owof games",
+    "email": "onefoxonewolf@gmail.com",
+    "url": "https://owof.games"
+  }
+}

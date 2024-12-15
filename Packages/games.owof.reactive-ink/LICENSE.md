@@ -1,0 +1,1 @@
+﻿Contains the [package license text](https://docs.unity3d.com/Manual/cus-legal.html). Usually the Package Manager copies the text from the selected [SPDX list website](https://spdx.org/licenses/).

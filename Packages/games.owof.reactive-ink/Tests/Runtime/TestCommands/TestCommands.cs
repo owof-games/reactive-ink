@@ -1,0 +1,110 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.Extensions.Time.Testing;
+using NUnit.Framework;
+using R3;
+using ReactiveInk.Commands;
+
+namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
+{
+    public class TestCommands : TestBase
+    {
+        [Test]
+        public async Task NoArgumentsCommand()
+        {
+            // create engine with default command line parser and a (non-waiting) command
+            using var storyActions = new Subject<StoryAction>();
+            var commandInfos = new List<CommandInfo<string>>();
+            using var engine = new ReactiveInkEngine(
+                GetJson(),
+                storyActions,
+                new[] { new DefaultLineCommandParser() },
+                new[] { new TestCommandProcessor(commandInfos) }
+            );
+            using var storySteps = new StoryStepsAsyncReader(engine);
+
+            // check no commands have executed
+            commandInfos.Should().BeEmpty("no command has executed yet.");
+
+            // make engine advance
+            storyActions.OnNext(StoryAction.Continue());
+            await storySteps.ReadAsync();
+
+            // check that a single command has executed
+            var commandInfo = commandInfos.Should().ContainSingle().Which;
+            commandInfo.NamedParametersNames.Should().BeEmpty();
+            commandInfo.PositionalParametersCount.Should().Be(0);
+        }
+
+        [Test]
+        public async Task NoArgumentsAsyncCommand()
+        {
+            // create engine with default command line parser and a (non-waiting) command
+            using var storyActions = new Subject<StoryAction>();
+            var commandInfos = new List<CommandInfo<string>>();
+            var fakeTimeProvider = new FakeTimeProvider();
+            using var engine = new ReactiveInkEngine(
+                GetJson(),
+                storyActions,
+                new[] { new DefaultLineCommandParser() },
+                new[] { new TestCommandProcessor(commandInfos, 2, fakeTimeProvider) }
+            );
+            using var storySteps = new StoryStepsAsyncReader(engine);
+
+            // check no commands have executed
+            commandInfos.Should().BeEmpty("no command has executed yet.");
+
+            // make engine advance
+            storyActions.OnNext(StoryAction.Continue());
+            storySteps.TryRead(out _).Should().Be(false, "the command is waiting");
+            commandInfos.Should().BeEmpty("no command has executed yet.");
+
+            // wait half the time and check that the engine didn't advance yet
+            fakeTimeProvider.Advance(TimeSpan.FromSeconds(1));
+            storySteps.TryRead(out _).Should().Be(false, "the command is still waiting after 1 second");
+            commandInfos.Should().BeEmpty("no command has executed yet.");
+
+            // advance to the full waiting time and check there's a single command execution
+            fakeTimeProvider.Advance(TimeSpan.FromSeconds(1));
+            await storySteps.ReadAsync();
+            var commandInfo = commandInfos.Should().ContainSingle().Which;
+            commandInfo.NamedParametersNames.Should().BeEmpty();
+            commandInfo.PositionalParametersCount.Should().Be(0);
+        }
+
+        [Test]
+        public async Task ArgumentsCommand()
+        {
+            // create engine with default command line parser and a (non-waiting) command
+            using var storyActions = new Subject<StoryAction>();
+            var commandInfos = new List<CommandInfo<string>>();
+            using var engine = new ReactiveInkEngine(
+                GetJson(),
+                storyActions,
+                new[] { new DefaultLineCommandParser() },
+                new[] { new TestCommandProcessor(commandInfos) }
+            );
+            using var storySteps = new StoryStepsAsyncReader(engine);
+
+            // make engine advance
+            storyActions.OnNext(StoryAction.Continue());
+            await storySteps.ReadAsync();
+
+            // check arguments of the command
+            var commandInfo = commandInfos.Should().ContainSingle().Which;
+            commandInfo.NamedParametersNames.Should().BeEquivalentTo(new[] { "param1", "param2" },
+                "The command has parameters 'param1' and 'param2'");
+            commandInfo.PositionalParametersCount.Should()
+                .Be(0, "Default line command parses no positional parameters");
+            commandInfo["param1"].Should().Be("value1", "'param1' has value 'value1'");
+            commandInfo["param2"].Should().Be("value 2", "'param2' has value 'value 2'");
+            commandInfo.TryGetParameter("param1", out var value1).Should().BeTrue("param1 is present");
+            value1.Should().Be("value1", "'param1' has value 'value1'");
+            commandInfo.TryGetParameter("param2", out var value2).Should().BeTrue("param2 is present");
+            value2.Should().Be("value 2", "'param2' has value 'value 2'");
+            commandInfo.TryGetParameter("param3", out _).Should().BeFalse("there is no param3");
+        }
+    }
+}

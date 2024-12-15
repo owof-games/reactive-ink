@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>FluentAssertions.Analyzers</id>
+    <version>0.34.1</version>
+    <authors>Meir Blachman</authors>
+    <developmentDependency>true</developmentDependency>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>FluentAssertions.png</icon>
+    <readme>docs/README.md</readme>
+    <projectUrl>https://github.com/fluentassertions/fluentassertions.analyzers</projectUrl>
+    <description>Analyzers to help writing fluentassertions the right way.</description>
+    <releaseNotes>See https://github.com/fluentassertions/fluentassertions.analyzers/releases/</releaseNotes>
+    <copyright>Copyright Meir Blachman 2017-2023</copyright>
+    <tags>FluentAssertions Analyzers</tags>
+    <repository type="git" url="https://github.com/fluentassertions/fluentassertions.analyzers" commit="4893a34c3e1bc3cf676eb54aa1b8dfc26ab463a2" />
+  </metadata>
+</package>

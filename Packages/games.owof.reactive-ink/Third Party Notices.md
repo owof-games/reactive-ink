@@ -1,0 +1,1 @@
+﻿Contains information that’s required to meet [legal requirements](https://docs.unity3d.com/Manual/cus-legal.html).
