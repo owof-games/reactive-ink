@@ -27,6 +27,16 @@ namespace ReactiveInk
             FlowName = string.IsNullOrEmpty(story.currentFlowName) ? null : story.currentFlowName;
         }
 
+        // TODO: temporary
+        public StoryStep()
+        {
+            Text = "";
+            Choices = Array.Empty<StoryChoice>();
+            CanContinue = true;
+            Tags = Array.Empty<string>();
+            FlowName = null;
+        }
+
         /// <summary>
         ///     The text to display in this type.
         /// </summary>

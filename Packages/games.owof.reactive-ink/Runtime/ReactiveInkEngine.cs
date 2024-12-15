@@ -27,6 +27,9 @@ namespace ReactiveInk
         private static readonly Dictionary<PostCommandActionType, List<PostCommandAction>>
             EmptyResultsByType = new();
 
+        private static readonly IReadOnlyDictionary<string, Value> EmptyPositionalParameters =
+            new Dictionary<string, Value>();
+
         /// <summary>
         ///     The available command parsers.
         /// </summary>
@@ -103,6 +106,8 @@ namespace ReactiveInk
                 (valueCommands ?? Array.Empty<ICommandProcessor<Value>>()).ToDictionary(command => command.CommandName,
                     command => command);
             _stringCommandNames = _stringCommands.Values.Select(command => command.CommandName).ToArray();
+            foreach (var command in _valueCommands.Values.Where(command => command.RegisterAsExternalFunction))
+                _story.BindExternalFunctionGeneral(command.CommandName, args => ExternalFunction(command, args));
 
             InitializeVariables();
         }
@@ -258,6 +263,18 @@ namespace ReactiveInk
             }
         }
 
+        private object? ExternalFunction(ICommandProcessor<Value> commandProcessor, object[] args)
+        {
+            var commandInfo = new CommandInfo<Value>(commandProcessor.CommandName, EmptyPositionalParameters,
+                args.Cast<Value>().ToArray());
+            var commandProcessorContext = new CommandProcessorContext(new StoryStep());
+            var task = commandProcessor
+                .Execute(commandInfo, commandProcessorContext, CancellationToken.None);
+            if (task.Status == UniTaskStatus.Pending) throw new Exception("external functions cannot be asynchronous");
+
+            return null;
+        }
+
         #region variables
 
         /// <summary>
@@ -337,7 +354,7 @@ namespace ReactiveInk
 
         #endregion
 
-        // TODO: default tags command parser, external functions
+        // TODO: external functions return values
 
         // TODO: save/load
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Ink.Runtime;
 using Microsoft.Extensions.Time.Testing;
 using NUnit.Framework;
 using R3;
@@ -11,6 +12,10 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
 {
     public class TestCommands : TestBase
     {
+        /*
+         * LINE COMMANDS
+         */
+
         [Test]
         public async Task NoArgumentsCommand()
         {
@@ -21,7 +26,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultLineCommandParser() },
-                new[] { new TestCommandProcessor(commandInfos) }
+                new[] { new TestCommandProcessor<string>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -49,7 +54,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultLineCommandParser() },
-                new[] { new TestCommandProcessor(commandInfos, 2, fakeTimeProvider) }
+                new[] { new TestCommandProcessor<string>(commandInfos, 2, fakeTimeProvider) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -84,7 +89,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultLineCommandParser() },
-                new[] { new TestCommandProcessor(commandInfos) }
+                new[] { new TestCommandProcessor<string>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -108,6 +113,10 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
             commandInfo.TryGetParameter(0, out _).Should().BeFalse("there are no positional parameters");
         }
 
+        /*
+         * TAG COMMANDS
+         */
+
         [Test]
         public async Task TagSingleCommand()
         {
@@ -118,7 +127,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultTagCommandParser() },
-                new[] { new TestCommandProcessor(commandInfos) }
+                new[] { new TestCommandProcessor<string>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -147,7 +156,8 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 new[] { new DefaultTagCommandParser() },
                 new[]
                 {
-                    new TestCommandProcessor(commandInfos), new TestCommandProcessor(commandInfos, name: "command2")
+                    new TestCommandProcessor<string>(commandInfos),
+                    new TestCommandProcessor<string>(commandInfos, name: "command2")
                 }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
@@ -177,7 +187,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultTagCommandParser() },
-                new[] { new TestCommandProcessor(commandInfos) }
+                new[] { new TestCommandProcessor<string>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -197,6 +207,66 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
             value2.Should().Be("value2", "Second parameter has value 'value2'");
             commandInfo.TryGetParameter(2, out _).Should().BeFalse("there is no third parameter");
             commandInfo.TryGetParameter("param", out _).Should().BeFalse("there are no named parameters");
+        }
+
+        /*
+         * EXTERNAL FUNCTIONS
+         */
+
+        [Test]
+        public async Task ExternalFunctionCommand()
+        {
+            // create engine with default command line parser and a (non-waiting) command
+            using var storyActions = new Subject<StoryAction>();
+            var commandInfos = new List<CommandInfo<Value>>();
+            using var engine = new ReactiveInkEngine(
+                GetJson(),
+                storyActions,
+                new ICommandParser[] { },
+                valueCommands: new[] { new TestCommandProcessor<Value>(commandInfos, registerAsExternal: true) }
+            );
+            using var storySteps = new StoryStepsAsyncReader(engine);
+
+            // check no commands have executed
+            commandInfos.Should().BeEmpty("no command has executed yet.");
+
+            // make engine advance
+            storyActions.OnNext(StoryAction.Continue());
+            await storySteps.ReadAsync();
+
+            // check exactly one command has been executed
+            var commandInfo = commandInfos.Should().ContainSingle().Which;
+            commandInfo.NamedParametersNames.Should().BeEmpty();
+            commandInfo.PositionalParametersCount.Should().Be(0);
+        }
+
+        [Test]
+        public async Task ExternalFunctionCommandWithArgs()
+        {
+            // create engine with default command line parser and a (non-waiting) command
+            using var storyActions = new Subject<StoryAction>();
+            var commandInfos = new List<CommandInfo<Value>>();
+            using var engine = new ReactiveInkEngine(
+                GetJson(),
+                storyActions,
+                new ICommandParser[] { },
+                valueCommands: new[] { new TestCommandProcessor<Value>(commandInfos, registerAsExternal: true) }
+            );
+            using var storySteps = new StoryStepsAsyncReader(engine);
+
+            // check no commands have executed
+            commandInfos.Should().BeEmpty("no command has executed yet.");
+
+            // make engine advance
+            storyActions.OnNext(StoryAction.Continue());
+            await storySteps.ReadAsync();
+
+            // check exactly one command has been executed
+            var commandInfo = commandInfos.Should().ContainSingle().Which;
+            commandInfo.NamedParametersNames.Should().BeEmpty();
+            commandInfo.PositionalParametersCount.Should().Be(2);
+            commandInfo[0].Should().HaveValue("hello");
+            commandInfo[1].Should().HaveValue(3);
         }
     }
 }

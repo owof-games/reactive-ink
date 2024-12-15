@@ -1,0 +1,4 @@
+~ command("hello", 3)
+Line.
+
+EXTERNAL command(a, b)
