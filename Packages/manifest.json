@@ -3,7 +3,6 @@
     "com.cysharp.r3": "1.2.9",
     "com.cysharp.unitask": "2.5.10",
     "com.github-glitchenzo.nugetforunity": "4.1.1",
-    "com.inkle.ink-unity-integration": "https://github.com/RedGlow/ink-unity-integration-for-reactive.git#upm",
     "com.unity.ide.rider": "3.0.34",
     "com.unity.multiplayer.center": "1.0.0",
     "com.unity.render-pipelines.universal": "17.0.3",
@@ -39,7 +38,8 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "com.inkle.ink-unity-integration": "1.2.1"
   },
   "scopedRegistries": [
     {
@@ -48,7 +48,8 @@
       "scopes": [
         "com.cysharp.r3",
         "com.cysharp.unitask",
-        "com.github-glitchenzo.nugetforunity"
+        "com.github-glitchenzo.nugetforunity",
+        "com.inkle.ink-unity-integration"
       ]
     }
   ]

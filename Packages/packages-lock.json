@@ -24,11 +24,11 @@
       "url": "https://package.openupm.com"
     },
     "com.inkle.ink-unity-integration": {
-      "version": "https://github.com/RedGlow/ink-unity-integration-for-reactive.git#upm",
+      "version": "1.2.1",
       "depth": 0,
-      "source": "git",
+      "source": "registry",
       "dependencies": {},
-      "hash": "537b5e69ecbdc6e79fcf196fd46a6c7b2b37bf32"
+      "url": "https://package.openupm.com"
     },
     "com.unity.burst": {
       "version": "1.8.18",
@@ -186,7 +186,7 @@
       "dependencies": {
         "com.cysharp.r3": "1.2.9",
         "com.cysharp.unitask": "2.5.10",
-        "com.inkle.ink-unity-integration": "https://github.com/RedGlow/ink-unity-integration-for-reactive.git#upm"
+        "com.inkle.ink-unity-integration": "1.2.1"
       }
     },
     "com.unity.modules.accessibility": {
