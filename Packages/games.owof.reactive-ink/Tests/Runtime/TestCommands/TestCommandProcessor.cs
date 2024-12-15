@@ -13,15 +13,16 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         private readonly TimeProvider _timeProvider;
 
         public TestCommandProcessor(List<CommandInfo<string>> commandInfosList, float delay = -1,
-            TimeProvider timeProvider = null)
+            TimeProvider timeProvider = null, string name = "command")
         {
             _delay = delay;
             _timeProvider = timeProvider;
             CommandInfosList = commandInfosList;
+            CommandName = name;
         }
 
         private List<CommandInfo<string>> CommandInfosList { get; }
-        public string CommandName => "command";
+        public string CommandName { get; }
         public bool RegisterAsExternalFunction => false;
 
         public async UniTask<PostCommandAction> Execute(CommandInfo<string> commandInfo,

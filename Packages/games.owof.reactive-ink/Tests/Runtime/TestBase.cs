@@ -28,8 +28,6 @@ namespace ReactiveInk.Tests.Tests.Runtime
             return story.ToJson();
         }
 
-        // protected StoryStepsAsyncReader GetStorySteps(ReactiveInkEngine engine)
-
         protected class StoryStepsAsyncReader : IDisposable
         {
             private readonly Channel<StoryStep> _channel;

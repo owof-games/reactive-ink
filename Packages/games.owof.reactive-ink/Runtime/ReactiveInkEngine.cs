@@ -9,6 +9,7 @@ using Cysharp.Threading.Tasks;
 using Ink.Runtime;
 using R3;
 using ReactiveInk.Commands;
+using UnityEngine;
 using Object = Ink.Runtime.Object;
 
 namespace ReactiveInk
@@ -89,7 +90,7 @@ namespace ReactiveInk
 
             _maxMillisecondsPerFrame = maxMillisecondsPerFrame;
 
-            storyActions.SubscribeAwait(OnStoryAction).AddTo(ref _disposableBag);
+            storyActions.SubscribeAwait(OnStoryAction, Debug.LogError, _ => { }).AddTo(ref _disposableBag);
 
             _storyStates = new Subject<StoryStep>().AddTo(ref _disposableBag);
             StorySteps = _storyStates.AsObservable();

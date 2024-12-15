@@ -16,12 +16,12 @@ namespace ReactiveInk.Commands
     public record CommandInfo<TValue>(
         string CommandName,
         IReadOnlyDictionary<string, TValue>? NamedParameters,
-        TValue[]? PositionalParameters)
+        IList<TValue>? PositionalParameters)
     {
         /// <summary>
         ///     Number of positional parameters.
         /// </summary>
-        public int PositionalParametersCount => PositionalParameters?.Length ?? 0;
+        public int PositionalParametersCount => PositionalParameters?.Count ?? 0;
 
         /// <summary>
         ///     Get the positional parameter at given index.
@@ -32,7 +32,7 @@ namespace ReactiveInk.Commands
         {
             get
             {
-                if (PositionalParameters == null || index < 0 || index >= PositionalParameters.Length)
+                if (PositionalParameters == null || index < 0 || index >= PositionalParameters.Count)
                     throw new InvalidOperationException($"Cannot find positional parameter: {index}");
 
                 return PositionalParameters[index];
@@ -74,7 +74,7 @@ namespace ReactiveInk.Commands
         {
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "index cannot be negative");
 
-            if (PositionalParameters == null || PositionalParameters.Length <= index)
+            if (PositionalParameters == null || PositionalParameters.Count <= index)
             {
                 value = default;
                 return false;
