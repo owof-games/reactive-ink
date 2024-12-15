@@ -1,15 +1,44 @@
 ﻿name: CI
+
+env:
+  # MINIMUM_VERSION: The minimum version of Unity.
+  MINIMUM_VERSION: 2021.3
+  EXCLUDE_FILTER: '(2020.2.0)'
+
 on:
   push:
     branches:
       - main
+
 jobs:
+  setup:
+    name: Extract unity versions
+    runs-on: ubuntu-latest
+    outputs:
+      unityVersions: ${{ steps.setup.outputs.unityVersions }}
+    steps:
+      - name: Find target Unity versions
+        id: setup
+#        run: |
+#          echo "==== Target Unity Versions ===="
+#          LATEST_VERSIONS=`npx unity-changeset list --versions --latest-patch --min ${MINIMUM_VERSION} --json --lts`
+#          ADDITIONAL_VERSIONS="[]"
+#          
+#          VERSIONS=`echo "[${LATEST_VERSIONS}, ${ADDITIONAL_VERSIONS}]" \
+#          | jq -c '[ flatten | sort | unique | .[] | select( test("${{ env.EXCLUDE_FILTER }}") | not ) ]'`
+#          echo "unityVersions=${VERSIONS}" | tee $GITHUB_OUTPUT
+        run: |
+          echo 'unityVersions=["2021.3.47f1", "6000.0.31f1", "2022.3.54f1"]' | tee $GITHUB_OUTPUT
   test:
-    strategy:
-      matrix:
-        unityVersion: ['6000.0.31f1', '2022.3.54f1', '2021.3.47f1']
     name: run unit tests
     runs-on: self-hosted
+    needs: setup
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.setup.outputs.unityVersions) }}
+        # '2021.3.47f1', '6000.0.31f1', '2022.3.54f1',
+        # unityVersion: [ '2022.3.54f1' ]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,7 +75,7 @@ jobs:
   split-upm:
     needs: test
     name: split upm branch
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
