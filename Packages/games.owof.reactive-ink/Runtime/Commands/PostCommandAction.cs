@@ -1,8 +1,6 @@
-﻿using Cysharp.Threading.Tasks;
-
-namespace ReactiveInk.Commands
+﻿namespace ReactiveInk.Commands
 {
-    internal enum PostCommandActionType
+    public enum PostCommandActionType
     {
         DoNothing,
         Continue,
@@ -34,31 +32,14 @@ namespace ReactiveInk.Commands
         /// <summary>
         ///     Create a return value for
         ///     <see
-        ///         cref="ICommandProcessor{TValue}.Execute(CommandInfo{TValue}, CommandProcessorContext, System.Threading.CancellationToken)" />
-        ///     when a choice is taken and the method is not async.
-        /// </summary>
-        /// <param name="commandProcessor">The command processor this result refers to.</param>
-        /// <param name="index">The index of the choice to take.</param>
-        /// <returns>A completed task representing the choice taken.</returns>
-        public static UniTask<PostCommandAction> TakeChoiceAsync<T>(this ICommandProcessor<T> commandProcessor,
-            int index)
-        {
-            var completionSource = new UniTaskCompletionSource<PostCommandAction>();
-            completionSource.TrySetResult(new PostCommandAction(commandProcessor.CommandName,
-                PostCommandActionType.Choice, index));
-            return completionSource.Task;
-        }
-
-        /// <summary>
-        ///     Create a return value for
-        ///     <see
-        ///         cref="ICommandProcessor{TValue}.Execute(CommandInfo{TValue}, CommandProcessorContext, System.Threading.CancellationToken)" />
+        ///         cref="ICommandProcessor{TValue,TParam}.Execute(CommandInfo{TValue}, CommandProcessorContext{TValue,TParam}, System.Threading.CancellationToken)" />
         ///     when a choice is taken and the method is async.
         /// </summary>
         /// <param name="commandProcessor">The command processor this result refers to.</param>
         /// <param name="index">The index of the choice to take.</param>
         /// <returns>An action representing the choice taken.</returns>
-        public static PostCommandAction TakeChoice<T>(this ICommandProcessor<T> commandProcessor, int index)
+        public static PostCommandAction TakeChoice<TValue, TParam>(
+            this ICommandProcessor<TValue, TParam> commandProcessor, int index)
         {
             return new PostCommandAction(commandProcessor.CommandName, PostCommandActionType.Choice, index);
         }
@@ -66,28 +47,13 @@ namespace ReactiveInk.Commands
         /// <summary>
         ///     Create a return value for
         ///     <see
-        ///         cref="ICommandProcessor{TValue}.Execute(CommandInfo{TValue}, CommandProcessorContext, System.Threading.CancellationToken)" />
-        ///     when no choice is taken and the method is not async.
-        /// </summary>
-        /// <param name="commandProcessor">The command processor this result refers to.</param>
-        /// <returns>A completed task representing a continue operation.</returns>
-        public static UniTask<PostCommandAction> ContinueAsync<T>(this ICommandProcessor<T> commandProcessor)
-        {
-            var completionSource = new UniTaskCompletionSource<PostCommandAction>();
-            completionSource.TrySetResult(new PostCommandAction(commandProcessor.CommandName,
-                PostCommandActionType.Continue, -1));
-            return completionSource.Task;
-        }
-
-        /// <summary>
-        ///     Create a return value for
-        ///     <see
-        ///         cref="ICommandProcessor{TValue}.Execute(CommandInfo{TValue}, CommandProcessorContext, System.Threading.CancellationToken)" />
+        ///         cref="ICommandProcessor{TValue,TParam}.Execute(CommandInfo{TValue}, CommandProcessorContext{TValue,TParam}, System.Threading.CancellationToken)" />
         ///     when no choice is taken and the method is async.
         /// </summary>
         /// <param name="commandProcessor">The command processor this result refers to.</param>
         /// <returns>An action representing a continue operation.</returns>
-        public static PostCommandAction Continue<T>(this ICommandProcessor<T> commandProcessor)
+        public static PostCommandAction Continue<TValue, TParam>(
+            this ICommandProcessor<TValue, TParam> commandProcessor)
         {
             return new PostCommandAction(commandProcessor.CommandName, PostCommandActionType.Continue, -1);
         }
@@ -95,28 +61,13 @@ namespace ReactiveInk.Commands
         /// <summary>
         ///     Create a return value for
         ///     <see
-        ///         cref="ICommandProcessor{TValue}.Execute(CommandInfo{TValue}, CommandProcessorContext, System.Threading.CancellationToken)" />
-        ///     when nothing must be done as a result of the command and the method is not async.
-        /// </summary>
-        /// <param name="commandProcessor">The command processor this result refers to.</param>
-        /// <returns>A completed task representing a continue operation.</returns>
-        public static UniTask<PostCommandAction> DoNothingAsync<T>(this ICommandProcessor<T> commandProcessor)
-        {
-            var completionSource = new UniTaskCompletionSource<PostCommandAction>();
-            completionSource.TrySetResult(new PostCommandAction(commandProcessor.CommandName,
-                PostCommandActionType.DoNothing, -1));
-            return completionSource.Task;
-        }
-
-        /// <summary>
-        ///     Create a return value for
-        ///     <see
-        ///         cref="ICommandProcessor{TValue}.Execute(CommandInfo{TValue}, CommandProcessorContext, System.Threading.CancellationToken)" />
+        ///         cref="ICommandProcessor{TValue,TParam}.Execute(CommandInfo{TValue}, CommandProcessorContext{TValue,TParam}, System.Threading.CancellationToken)" />
         ///     when nothing must be done as a result of the command and the method is async.
         /// </summary>
         /// <param name="commandProcessor">The command processor this result refers to.</param>
         /// <returns>An action representing a continue operation.</returns>
-        public static PostCommandAction DoNothing<T>(this ICommandProcessor<T> commandProcessor)
+        public static PostCommandAction DoNothing<TParam, TResult>(
+            this ICommandProcessor<TParam, TResult> commandProcessor)
         {
             return new PostCommandAction(commandProcessor.CommandName, PostCommandActionType.DoNothing, -1);
         }

@@ -7,27 +7,30 @@ using ReactiveInk.Commands;
 
 namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
 {
-    public class TestCommandProcessor<T> : ICommandProcessor<T>
+    public class TestCommandProcessor<TValue, TResult> : ICommandProcessor<TValue, TResult>
     {
         private readonly float _delay;
+        private readonly object _returnValue;
         private readonly TimeProvider _timeProvider;
 
-        public TestCommandProcessor(List<CommandInfo<T>> commandInfosList, float delay = -1,
-            TimeProvider timeProvider = null, string name = "command", bool registerAsExternal = false)
+        public TestCommandProcessor(List<CommandInfo<TValue>> commandInfosList, float delay = -1,
+            TimeProvider timeProvider = null, string name = "command", bool registerAsExternal = false,
+            object returnValue = null)
         {
             _delay = delay;
             _timeProvider = timeProvider;
+            _returnValue = returnValue;
             CommandInfosList = commandInfosList;
             CommandName = name;
             RegisterAsExternalFunction = registerAsExternal;
         }
 
-        private List<CommandInfo<T>> CommandInfosList { get; }
+        private List<CommandInfo<TValue>> CommandInfosList { get; }
         public string CommandName { get; }
         public bool RegisterAsExternalFunction { get; }
 
-        public async UniTask<PostCommandAction> Execute(CommandInfo<T> commandInfo,
-            CommandProcessorContext context, CancellationToken cancellationToken)
+        public async UniTask Execute(CommandInfo<TValue> commandInfo,
+            CommandProcessorContext<TValue, TResult> context, CancellationToken cancellationToken)
         {
             if (_delay > 0)
             {
@@ -39,7 +42,9 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
 
             CommandInfosList.Add(commandInfo);
 
-            return await this.ContinueAsync();
+            if (_returnValue != null) context.SetResult((TResult)_returnValue);
+
+            context.PostCommandAction = this.DoNothing();
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Ink.Runtime;
 using Microsoft.Extensions.Time.Testing;
 using NUnit.Framework;
 using R3;
@@ -26,7 +25,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultLineCommandParser() },
-                new[] { new TestCommandProcessor<string>(commandInfos) }
+                new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -54,7 +53,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultLineCommandParser() },
-                new[] { new TestCommandProcessor<string>(commandInfos, 2, fakeTimeProvider) }
+                new[] { new TestCommandProcessor<string, Unit>(commandInfos, 2, fakeTimeProvider) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -89,7 +88,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultLineCommandParser() },
-                new[] { new TestCommandProcessor<string>(commandInfos) }
+                new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -127,7 +126,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultTagCommandParser() },
-                new[] { new TestCommandProcessor<string>(commandInfos) }
+                new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -156,8 +155,8 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 new[] { new DefaultTagCommandParser() },
                 new[]
                 {
-                    new TestCommandProcessor<string>(commandInfos),
-                    new TestCommandProcessor<string>(commandInfos, name: "command2")
+                    new TestCommandProcessor<string, Unit>(commandInfos),
+                    new TestCommandProcessor<string, Unit>(commandInfos, name: "command2")
                 }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
@@ -187,7 +186,7 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                 GetJson(),
                 storyActions,
                 new[] { new DefaultTagCommandParser() },
-                new[] { new TestCommandProcessor<string>(commandInfos) }
+                new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -218,12 +217,13 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         {
             // create engine with default command line parser and a (non-waiting) command
             using var storyActions = new Subject<StoryAction>();
-            var commandInfos = new List<CommandInfo<Value>>();
+            var commandInfos = new List<CommandInfo<object>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
                 storyActions,
                 new ICommandParser[] { },
-                valueCommands: new[] { new TestCommandProcessor<Value>(commandInfos, registerAsExternal: true) }
+                valueCommands: new[]
+                    { new TestCommandProcessor<object, object>(commandInfos, registerAsExternal: true) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -245,12 +245,13 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         {
             // create engine with default command line parser and a (non-waiting) command
             using var storyActions = new Subject<StoryAction>();
-            var commandInfos = new List<CommandInfo<Value>>();
+            var commandInfos = new List<CommandInfo<object>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
                 storyActions,
                 new ICommandParser[] { },
-                valueCommands: new[] { new TestCommandProcessor<Value>(commandInfos, registerAsExternal: true) }
+                valueCommands: new[]
+                    { new TestCommandProcessor<object, object>(commandInfos, registerAsExternal: true) }
             );
             using var storySteps = new StoryStepsAsyncReader(engine);
 
@@ -265,8 +266,35 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
             var commandInfo = commandInfos.Should().ContainSingle().Which;
             commandInfo.NamedParametersNames.Should().BeEmpty();
             commandInfo.PositionalParametersCount.Should().Be(2);
-            commandInfo[0].Should().HaveValue("hello");
-            commandInfo[1].Should().HaveValue(3);
+            commandInfo[0].Should().Be("hello");
+            commandInfo[1].Should().Be(3);
+        }
+
+        [Test]
+        public async Task ExternalFunctionCommandWithReturnValue()
+        {
+            // create engine with default command line parser and a (non-waiting) command
+            using var storyActions = new Subject<StoryAction>();
+            var commandInfos = new List<CommandInfo<object>>();
+            using var engine = new ReactiveInkEngine(
+                GetJson(),
+                storyActions,
+                new ICommandParser[] { },
+                valueCommands: new[]
+                    { new TestCommandProcessor<object, object>(commandInfos, registerAsExternal: true, returnValue: 9) }
+            );
+            using var storySteps = new StoryStepsAsyncReader(engine);
+
+            // check no commands have executed
+            commandInfos.Should().BeEmpty("no command has executed yet.");
+
+            // make engine advance
+            storyActions.OnNext(StoryAction.Continue());
+            var line = await storySteps.ReadAsync();
+            line.Text.Should().Be("x is 9.");
+
+            // check exactly one command has been executed
+            commandInfos.Should().ContainSingle();
         }
     }
 }

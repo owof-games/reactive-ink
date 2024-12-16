@@ -1,0 +1,5 @@
+﻿VAR x = 0
+~ x = command()
+x is {x}.
+
+EXTERNAL command()

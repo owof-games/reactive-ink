@@ -7,7 +7,7 @@ namespace ReactiveInk.Commands
     ///     A processor to execute commands.
     /// </summary>
     /// <typeparam name="TValue">The type of parameter values for this processor.</typeparam>
-    public interface ICommandProcessor<TValue>
+    public interface ICommandProcessor<TValue, TResult>
     {
         /// <summary>
         ///     Name of the command. The interpretation of what the name is changes according to the fact if this command
@@ -35,7 +35,7 @@ namespace ReactiveInk.Commands
         ///     <see cref="PostCommandActionExtensions.DoNothingAsyncAsync{T}" /> are helpers that can be used to
         ///     immediately produce this return value if there are no async operations needed.
         /// </returns>
-        UniTask<PostCommandAction> Execute(CommandInfo<TValue> commandInfo, CommandProcessorContext context,
+        UniTask Execute(CommandInfo<TValue> commandInfo, CommandProcessorContext<TValue, TResult> context,
             CancellationToken cancellationToken);
     }
 }

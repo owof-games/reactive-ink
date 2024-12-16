@@ -27,13 +27,18 @@ namespace ReactiveInk
         private static readonly Dictionary<PostCommandActionType, List<PostCommandAction>>
             EmptyResultsByType = new();
 
-        private static readonly IReadOnlyDictionary<string, Value> EmptyPositionalParameters =
-            new Dictionary<string, Value>();
+        private static readonly IReadOnlyDictionary<string, object> EmptyPositionalParameters =
+            new Dictionary<string, object>();
 
         /// <summary>
         ///     The available command parsers.
         /// </summary>
         private readonly IEnumerable<ICommandParser> _commandParsers;
+
+        /// <summary>
+        ///     All the known value commands, indexed by name.
+        /// </summary>
+        private readonly string[] _externalFunctionsToUnbind;
 
         /// <summary>
         ///     Maximum number of milliseconds that the Ink engine can run every frame.
@@ -58,12 +63,7 @@ namespace ReactiveInk
         /// <summary>
         ///     All the known string commands, indexed by name.
         /// </summary>
-        private readonly Dictionary<string, ICommandProcessor<string>> _stringCommands;
-
-        /// <summary>
-        ///     All the known value commands, indexed by name.
-        /// </summary>
-        private readonly Dictionary<string, ICommandProcessor<Value>> _valueCommands;
+        private readonly Dictionary<string, ICommandProcessor<string, Unit>> _stringCommands;
 
         /// <summary>
         ///     A bag to contain all disposables produced by the engine which must be disposed when it gets out of scope.
@@ -85,8 +85,8 @@ namespace ReactiveInk
         public ReactiveInkEngine(string text,
             Observable<StoryAction> storyActions,
             IEnumerable<ICommandParser>? commandParsers = null,
-            IEnumerable<ICommandProcessor<string>>? stringCommands = null,
-            IEnumerable<ICommandProcessor<Value>>? valueCommands = null,
+            IEnumerable<ICommandProcessor<string, Unit>>? stringCommands = null,
+            IEnumerable<ICommandProcessor<object, object>>? valueCommands = null,
             float maxMillisecondsPerFrame = 1000.0f / 60 / 2)
         {
             _story = new Story(text);
@@ -100,14 +100,24 @@ namespace ReactiveInk
 
             _commandParsers = commandParsers ?? Array.Empty<ICommandParser>();
             _stringCommands =
-                (stringCommands ?? Array.Empty<ICommandProcessor<string>>()).ToDictionary(
+                (stringCommands ?? Array.Empty<ICommandProcessor<string, Unit>>()).ToDictionary(
                     command => command.CommandName, command => command);
-            _valueCommands =
-                (valueCommands ?? Array.Empty<ICommandProcessor<Value>>()).ToDictionary(command => command.CommandName,
-                    command => command);
             _stringCommandNames = _stringCommands.Values.Select(command => command.CommandName).ToArray();
-            foreach (var command in _valueCommands.Values.Where(command => command.RegisterAsExternalFunction))
-                _story.BindExternalFunctionGeneral(command.CommandName, args => ExternalFunction(command, args));
+            if (valueCommands != null)
+            {
+                var names = new List<string>();
+                foreach (var command in valueCommands.Where(command => command.RegisterAsExternalFunction))
+                {
+                    _story.BindExternalFunctionGeneral(command.CommandName, args => ExternalFunction(command, args));
+                    names.Add(command.CommandName);
+                }
+
+                _externalFunctionsToUnbind = names.ToArray();
+            }
+            else
+            {
+                _externalFunctionsToUnbind = Array.Empty<string>();
+            }
 
             InitializeVariables();
         }
@@ -120,6 +130,7 @@ namespace ReactiveInk
         public void Dispose()
         {
             _disposableBag.Dispose();
+            foreach (var name in _externalFunctionsToUnbind) _story.UnbindExternalFunction(name);
         }
 
         /// <summary>
@@ -189,14 +200,16 @@ namespace ReactiveInk
                 return EmptyResultsByType;
 
             // process the commands and create an array of results
-            var commandProcessorContext = new CommandProcessorContext(storyStep);
             var actionsList = await allCommandInfo
                 .ToObservable()
                 .SelectAwait(async (commandInfo, cancellationToken) =>
                 {
-                    var result = await _stringCommands[commandInfo.CommandName]
+                    var commandProcessor = _stringCommands[commandInfo.CommandName];
+                    var commandProcessorContext =
+                        new CommandProcessorContext<string, Unit>(commandProcessor, storyStep);
+                    await commandProcessor
                         .Execute(commandInfo, commandProcessorContext, cancellationToken);
-                    return result;
+                    return commandProcessorContext.PostCommandAction;
                 })
                 .ToArrayAsync(token);
 
@@ -263,16 +276,17 @@ namespace ReactiveInk
             }
         }
 
-        private object? ExternalFunction(ICommandProcessor<Value> commandProcessor, object[] args)
+        private static object? ExternalFunction(ICommandProcessor<object, object> commandProcessor, object[] args)
         {
-            var commandInfo = new CommandInfo<Value>(commandProcessor.CommandName, EmptyPositionalParameters,
-                args.Cast<Value>().ToArray());
-            var commandProcessorContext = new CommandProcessorContext(new StoryStep());
+            var commandInfo = new CommandInfo<object>(commandProcessor.CommandName, EmptyPositionalParameters,
+                args.ToArray());
+            var commandProcessorContext =
+                new CommandProcessorContext<object, object>(commandProcessor, new StoryStep());
             var task = commandProcessor
                 .Execute(commandInfo, commandProcessorContext, CancellationToken.None);
-            if (task.Status == UniTaskStatus.Pending) throw new Exception("external functions cannot be asynchronous");
 
-            return null;
+            if (task.Status == UniTaskStatus.Pending) throw new Exception("external functions cannot be asynchronous");
+            return commandProcessorContext.TryGetResult(out var result) ? result : null;
         }
 
         #region variables
