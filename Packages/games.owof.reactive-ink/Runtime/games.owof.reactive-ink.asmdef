@@ -2,15 +2,20 @@
   "name": "games.owof.reactive-ink",
   "rootNamespace": "ReactiveInk",
   "references": [
-    "R3.Unity",
     "Ink-Libraries",
     "UniTask"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
-  "overrideReferences": false,
-  "precompiledReferences": [],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "R3.dll",
+    "Microsoft.Bcl.TimeProvider.dll",
+    "System.Threading.Channels.dll",
+    "Microsoft.Bcl.AsyncInterfaces.dll",
+    "System.Runtime.CompilerServices.Unsafe.dll"
+  ],
   "autoReferenced": true,
   "defineConstraints": [],
   "versionDefines": [],
