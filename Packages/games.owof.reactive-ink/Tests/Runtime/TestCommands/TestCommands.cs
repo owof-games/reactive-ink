@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
 using NUnit.Framework;
@@ -19,22 +20,18 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task NoArgumentsCommand()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<string>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new[] { new DefaultLineCommandParser() },
                 new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // check no commands have executed
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            await storySteps.ReadAsync();
+            await engine.Continue();
 
             // check that a single command has executed
             var commandInfo = commandInfos.Should().ContainSingle().Which;
@@ -46,33 +43,30 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task NoArgumentsAsyncCommand()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<string>>();
             var fakeTimeProvider = new FakeTimeProvider();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new[] { new DefaultLineCommandParser() },
                 new[] { new TestCommandProcessor<string, Unit>(commandInfos, 2, fakeTimeProvider) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // check no commands have executed
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            storySteps.TryRead(out _).Should().Be(false, "the command is waiting");
+            var continue1 = engine.Continue();
+            continue1.Status.Should().Be(UniTaskStatus.Pending, "the command is waiting");
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // wait half the time and check that the engine didn't advance yet
             fakeTimeProvider.Advance(TimeSpan.FromSeconds(1));
-            storySteps.TryRead(out _).Should().Be(false, "the command is still waiting after 1 second");
+            continue1.Status.Should().Be(UniTaskStatus.Pending, "the command is still waiting after 1 second");
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // advance to the full waiting time and check there's a single command execution
             fakeTimeProvider.Advance(TimeSpan.FromSeconds(1));
-            await storySteps.ReadAsync();
+            await continue1;
             var commandInfo = commandInfos.Should().ContainSingle().Which;
             commandInfo.NamedParametersNames.Should().BeEmpty();
             commandInfo.PositionalParametersCount.Should().Be(0);
@@ -82,19 +76,15 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task ArgumentsCommand()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<string>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new[] { new DefaultLineCommandParser() },
                 new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            await storySteps.ReadAsync();
+            await engine.Continue();
 
             // check arguments of the command
             var commandInfo = commandInfos.Should().ContainSingle().Which;
@@ -120,22 +110,18 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task TagSingleCommand()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<string>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new[] { new DefaultTagCommandParser() },
                 new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // check no commands have executed
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            await storySteps.ReadAsync();
+            await engine.Continue();
 
             // check that a single command has executed
             var commandInfo = commandInfos.Should().ContainSingle().Which;
@@ -147,11 +133,9 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task TagMultiCommand()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<string>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new[] { new DefaultTagCommandParser() },
                 new[]
                 {
@@ -159,14 +143,12 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
                     new TestCommandProcessor<string, Unit>(commandInfos, name: "command2")
                 }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // check no commands have executed
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            await storySteps.ReadAsync();
+            await engine.Continue();
 
             // check that two commands have executed
             commandInfos.Should().HaveCount(2);
@@ -180,19 +162,15 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task TagCommandWithParameters()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<string>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new[] { new DefaultTagCommandParser() },
                 new[] { new TestCommandProcessor<string, Unit>(commandInfos) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            await storySteps.ReadAsync();
+            await engine.Continue();
 
             // check that a single command has executed
             var commandInfo = commandInfos.Should().ContainSingle().Which;
@@ -216,23 +194,19 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task ExternalFunctionCommand()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<object>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new ICommandParser[] { },
                 valueCommands: new[]
                     { new TestCommandProcessor<object, object>(commandInfos, registerAsExternal: true) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // check no commands have executed
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            await storySteps.ReadAsync();
+            await engine.Continue();
 
             // check exactly one command has been executed
             var commandInfo = commandInfos.Should().ContainSingle().Which;
@@ -244,23 +218,19 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task ExternalFunctionCommandWithArgs()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<object>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new ICommandParser[] { },
                 valueCommands: new[]
                     { new TestCommandProcessor<object, object>(commandInfos, registerAsExternal: true) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // check no commands have executed
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            await storySteps.ReadAsync();
+            await engine.Continue();
 
             // check exactly one command has been executed
             var commandInfo = commandInfos.Should().ContainSingle().Which;
@@ -274,23 +244,19 @@ namespace ReactiveInk.Tests.Tests.Runtime.TestCommands
         public async Task ExternalFunctionCommandWithReturnValue()
         {
             // create engine with default command line parser and a (non-waiting) command
-            using var storyActions = new Subject<StoryAction>();
             var commandInfos = new List<CommandInfo<object>>();
             using var engine = new ReactiveInkEngine(
                 GetJson(),
-                storyActions,
                 new ICommandParser[] { },
                 valueCommands: new[]
                     { new TestCommandProcessor<object, object>(commandInfos, registerAsExternal: true, returnValue: 9) }
             );
-            using var storySteps = new StoryStepsAsyncReader(engine);
 
             // check no commands have executed
             commandInfos.Should().BeEmpty("no command has executed yet.");
 
             // make engine advance
-            storyActions.OnNext(StoryAction.Continue());
-            var line = await storySteps.ReadAsync();
+            var line = await engine.Continue();
             line.Text.Should().Be("x is 9.");
 
             // check exactly one command has been executed

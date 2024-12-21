@@ -9,7 +9,6 @@ using Cysharp.Threading.Tasks;
 using Ink.Runtime;
 using R3;
 using ReactiveInk.Commands;
-using UnityEngine;
 using Object = Ink.Runtime.Object;
 
 namespace ReactiveInk
@@ -74,7 +73,6 @@ namespace ReactiveInk
         ///     Create a new reactive ink engine.
         /// </summary>
         /// <param name="text">The JSON text content of the story.</param>
-        /// <param name="storyActions">A stream of actions that the engine will react to.</param>
         /// <param name="commandParsers">The parsers used to find commands in the story.</param>
         /// <param name="stringCommands">All the command processors that use string parameters.</param>
         /// <param name="valueCommands">All the command processors that use value parameters.</param>
@@ -83,7 +81,6 @@ namespace ReactiveInk
         ///     frame (by default, half of a 60fps frame duration).
         /// </param>
         public ReactiveInkEngine(string text,
-            Observable<StoryAction> storyActions,
             IEnumerable<ICommandParser>? commandParsers = null,
             IEnumerable<ICommandProcessor<string, Unit>>? stringCommands = null,
             IEnumerable<ICommandProcessor<object, object>>? valueCommands = null,
@@ -92,8 +89,6 @@ namespace ReactiveInk
             _story = new Story(text);
 
             _maxMillisecondsPerFrame = maxMillisecondsPerFrame;
-
-            storyActions.SubscribeAwait(OnStoryAction, Debug.LogError, _ => { }).AddTo(ref _disposableBag);
 
             _storyStates = new Subject<StoryStep>().AddTo(ref _disposableBag);
             StorySteps = _storyStates.AsObservable();
@@ -134,35 +129,43 @@ namespace ReactiveInk
         }
 
         /// <summary>
-        ///     Handles a single story action (choice or continue).
+        /// Take a choice. This method does not actually advance, <see cref="Continue"/> must be called.
         /// </summary>
-        /// <param name="action">The action to handle.</param>
-        /// <param name="token">The cancellation token.</param>
-        private async ValueTask OnStoryAction(StoryAction action, CancellationToken token)
+        /// <param name="choiceIndex">The index of the choice to take.</param>
+        public void TakeChoice(int choiceIndex)
         {
-            if (action.Choice is { } choiceIndex)
-                _story.ChooseChoiceIndex(choiceIndex);
-            else
-                for (;;)
-                {
-                    // spread execution of continue over multiple frames within the maximum budget of
-                    // _maxMillisecondsPerFrame every frame
-                    await ContinueRespectingTimeBudget(token);
+            _story.ChooseChoiceIndex(choiceIndex);
+        }
 
-                    // create the current story step
-                    var storyStep = new StoryStep(_story);
+        /// <summary>
+        ///     Continue the story. This method will take into account the maximum time budget per frame allocated,
+        ///     spreading the Continue call along multiple frames if needed. It will also execute any command found and
+        ///     automatically advance.
+        /// </summary>
+        /// <param name="token">The cancellation token to use in order to cancel the execution of this operation.</param>
+        /// <returns>A description of the current story step.</returns>
+        public async UniTask<StoryStep> Continue(CancellationToken token = default)
+        {
+            for (;;)
+            {
+                // spread execution of continue over multiple frames within the maximum budget of
+                // _maxMillisecondsPerFrame every frame
+                await ContinueRespectingTimeBudget(token);
 
-                    // run all the commands found at this step and extract the results according to the type
-                    var actionsByType = await RunCommands(storyStep, token);
+                // create the current story step
+                var storyStep = new StoryStep(_story);
 
-                    // execute the command results and decide if we must repeat this loop (e.g.: some command requested to
-                    // continue)
-                    if (ExecutePostCommandActions(actionsByType, storyStep)) continue;
+                // run all the commands found at this step and extract the results according to the type
+                var actionsByType = await RunCommands(storyStep, token);
 
-                    // no commands requested to continue: finish processing and notify the new story step
-                    _storyStates.OnNext(storyStep);
-                    break;
-                }
+                // execute the command results and decide if we must repeat this loop (e.g.: some command requested to
+                // continue)
+                if (ExecutePostCommandActions(actionsByType, storyStep)) continue;
+
+                // no commands requested to continue: finish processing and notify the new story step
+                _storyStates.OnNext(storyStep);
+                return storyStep;
+            }
         }
 
         /// <summary>
@@ -173,10 +176,14 @@ namespace ReactiveInk
         {
             for (;;)
             {
+                // check if the computation must stop
                 token.ThrowIfCancellationRequested();
+
+                // continue the story and exit if the continue operation completed
                 _story.ContinueAsync(_maxMillisecondsPerFrame);
                 if (_story.asyncContinueComplete) break;
 
+                // the continue operation did not complete in the allotted time frame: wait for the next frame to complete 
                 await UniTask.NextFrame();
             }
         }
@@ -396,8 +403,6 @@ namespace ReactiveInk
         }
 
         #endregion
-
-        // TODO: save/load
 
         // TODO: EvaluateFunction
 
