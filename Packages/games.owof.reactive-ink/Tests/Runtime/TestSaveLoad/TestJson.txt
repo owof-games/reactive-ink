@@ -1,0 +1,7 @@
+﻿VAR x = 0
+VAR y = 2
+First line (x={x}, y={y}).
+~ x = 2
+Second line (x={x}, y={y}).
+~ y = 3
+Third line (x={x}, y={y}).

@@ -181,6 +181,8 @@ namespace ReactiveInk
             }
         }
 
+        #region commands and external functions
+
         /// <summary>
         ///     Run all the commands found on the given line.
         /// </summary>
@@ -289,6 +291,8 @@ namespace ReactiveInk
             return commandProcessorContext.TryGetResult(out var result) ? result : null;
         }
 
+        #endregion
+
         #region variables
 
         /// <summary>
@@ -368,7 +372,30 @@ namespace ReactiveInk
 
         #endregion
 
-        // TODO: external functions return values
+        #region save/load
+
+        /// <summary>
+        ///     Get the current story state as a JSON string. Typically used to save the story, in conjunction with
+        ///     <see cref="FromJson" /> to load it back.
+        /// </summary>
+        /// <returns>A JSON string representing the story state.</returns>
+        public string ToJson()
+        {
+            return _story.state.ToJson();
+        }
+
+        /// <summary>
+        ///     Load the story state from a JSON string. Typically used to load the story, in conjunction with
+        ///     <see cref="ToJson" /> to save it.
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public void FromJson(string json)
+        {
+            _story.state.LoadJson(json);
+        }
+
+        #endregion
 
         // TODO: save/load
 

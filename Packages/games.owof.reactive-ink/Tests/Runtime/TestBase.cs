@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Ink;
 using R3;
 using UnityEditor;
@@ -23,6 +24,7 @@ namespace ReactiveInk.Tests.Tests.Runtime
             var filename = $"{memberName}.txt";
             var assetPath = $"Packages/games.owof.reactive-ink/Tests/Runtime/{GetType().Name}/{filename}";
             var inkFile = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+            inkFile.Should().NotBeNull("The resource {0} should be present in the filesystem", assetPath);
             var compiler = new Compiler(inkFile.text);
             var story = compiler.Compile();
             return story.ToJson();
